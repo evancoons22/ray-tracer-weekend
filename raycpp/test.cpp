@@ -5,7 +5,9 @@
 #include <iostream>
 
 color ray_color(const ray& r) {
-    return color(0,0,0);
+    vec3 unit_direction = unit_vector(r.direction());
+    auto a = 0.5*(unit_direction.y() + 1.0);
+    return (1.0-a)*color(1.0, 1.0, 1.0) + a*color(0.5, 0.7, 1.0);
 }
 
 int main() {
@@ -20,9 +22,10 @@ int main() {
     image_height = (image_height < 1) ? 1 : image_height;
 
     // Camera
-    auto focal_length = 1.0; // distance from the camera to the viewport
+
+    auto focal_length = 1.0;
     auto viewport_height = 2.0;
-    auto viewport_width = viewport_height * (static_cast<double>(image_width)/image_height); // don't use the aspect ration because that is "ideal", maybe not true
+    auto viewport_width = viewport_height * (static_cast<double>(image_width)/image_height);
     auto camera_center = point3(0, 0, 0);
 
     // Calculate the vectors across the horizontal and down the vertical viewport edges.
@@ -35,7 +38,7 @@ int main() {
 
     // Calculate the location of the upper left pixel.
     auto viewport_upper_left = camera_center
-        - vec3(0, 0, focal_length) - viewport_u/2 - viewport_v/2;
+                             - vec3(0, 0, focal_length) - viewport_u/2 - viewport_v/2;
     auto pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
     // Render
