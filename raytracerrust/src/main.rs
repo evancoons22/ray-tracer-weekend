@@ -1,24 +1,22 @@
+use raytracerrust::vec3::*;
+use raytracerrust::camera::*;
+use raytracerrust::helper::*;
+use raytracerrust::color::*;
 
-fn main() {
-    let  image_width: i32 = 256;
-    let  image_height: i32 = 256;
-
-    print!("P3\n{:?} {:?}\n", image_width, image_height);
-    print!("255\n");
-
-    
-    for i in 1..image_height { 
-        for j in 1..image_width {
-            let r: f32 = (i as f32) / ((image_width - 1) as f32);
-            let g: f32 = (j as f32) / ((image_height - 1) as f32);
-            let b: f32 = 0.0;
-
-            let ir: i32 = r.round() as i32;
-            let ig: i32 = g.round() as i32;
-            let ib: i32 = b.round() as i32;
-
-            print!("{:?} {:?} {:?}\n", ir, ig, ib);
-
-        }
-    }
+fn main() { 
+    let cam = Camera {
+        pixel00_loc: Vec3::new(-2.0, 1.0, 1.0),
+        look_from: Vec3::new(0.0, 0.0, -1.0),
+        look_at: Vec3::new(0.0, 0.0, 0.0),
+        top_left_corner: Vec3::new(-2.0, 1.0, 1.0),
+        horizontal: Vec3::new(4.0, 0.0, 0.0),
+        vertical: Vec3::new(0.0, -2.0, 0.0),
+        image_width: 256,
+        image_height: 256,
+        max_depth: 10,
+        aspect_ratio: 16.0 / 9.0,
+    };
+    // setup
+    setup_ppm(&cam);
+    fill_background_color(cam.image_width, cam.image_height, Color::new(150, 52, 235));
 }
