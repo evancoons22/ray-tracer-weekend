@@ -1,45 +1,28 @@
-pub struct Color {
-    pub r: i32,
-    pub g: i32,
-    pub b: i32,
+use std::fmt::Display;
+
+pub struct Color<T> {
+    pub r: T,
+    pub g: T,
+    pub b: T,
 }
 
-pub struct ColorFloat {
-    pub r: f32,
-    pub g: f32,
-    pub b: f32,
-}
-
-impl From<Color> for ColorFloat {
-    fn from(color: Color) -> Self {
-        ColorFloat {
-            r: color.r as f32 / 255.99,
-            g: color.g as f32 / 255.99,
-            b: color.b as f32 / 255.99,
-        }
+impl Display for Color<i32> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?} {:?} {:?}\n", self.r, self.g, self.b)
     }
 }
 
-impl Color  { 
-    pub fn write_color(&self) {
-        print!("{:?} {:?} {:?}\n", self.r, self.g, self.b);
+impl Display for Color<f32> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?} {:?} {:?}\n", (self.r * 255.99) as i32, (self.g * 255.99) as i32, (self.b * 255.99) as i32)
     }
-    pub fn new(r: i32, g: i32, b: i32) -> Color { 
+}
+
+
+impl Color<f32> {
+    pub fn new(r: f32, g: f32, b: f32) -> Color<f32> {
         Color { r, g, b }
     }
 }
-
-impl ColorFloat  { 
-    pub fn write_color(&self) {
-        let ir = (self.r * 255.99) as i32;
-        let ig = (self.g * 255.99) as i32;
-        let ib = (self.b * 255.99) as i32;
-        print!("{:?} {:?} {:?}\n", ir, ig, ib);
-    }
-    pub fn new(r: f32, g: f32, b: f32) -> ColorFloat { 
-        ColorFloat { r, g, b }
-    }
-}
-
 
 

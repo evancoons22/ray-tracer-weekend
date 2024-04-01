@@ -23,8 +23,8 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn ray_color(ray: &Ray) -> ColorFloat { 
-        return ColorFloat::new(0.0, 0.0, 0.0);
+    pub fn ray_color(_ray: &Ray) -> Color<f32> { 
+        return Color::new(0.0, 0.0, 0.0);
     }
 
     pub fn new(image_width: i32, aspect_ratio: f32) -> Camera {

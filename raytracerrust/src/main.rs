@@ -8,5 +8,5 @@ fn main() {
     let cam = Camera::new(width, aspect_ratio);
 
     setup_ppm(&cam);
-    fill_background_color(cam.image_width, cam.image_height, ColorFloat::new(0.5, 0.7, 1.0));
+    fill_background_color(cam.image_width, cam.image_height, Color::new(0.5, 0.7, 1.0));
 }

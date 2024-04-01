@@ -1,18 +1,20 @@
 use crate::camera::Camera;
 use crate::color::*;
+use std::fmt::Display;
 
 pub fn setup_ppm(camera: &Camera) { 
     print!("P3\n{:?} {:?}\n", camera.image_width, camera.image_height);
     print!("255\n");
 }
 
-pub fn fill_background_color(image_width: i32, image_height: i32, color: ColorFloat) { 
+pub fn fill_background_color<T: Display>(image_width: i32, image_height: i32, color: Color<T>) { 
     for _ in 0..image_width {
         for _ in 0..image_height { 
-            color.write_color();
+            print!("{}", color);
         }
     }
 }
+
 
 pub fn fill_gradient(image_width: i32, image_height: i32) { 
     for j in 0..image_width {
