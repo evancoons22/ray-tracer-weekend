@@ -6,10 +6,10 @@ pub fn setup_ppm(camera: &Camera) {
     print!("255\n");
 }
 
-pub fn fill_background_color(image_width: i32, image_height: i32, color: Color) { 
+pub fn fill_background_color(image_width: i32, image_height: i32, color: ColorFloat) { 
     for _ in 0..image_width {
         for _ in 0..image_height { 
-            write_color(&color);
+            color.write_color();
         }
     }
 }
