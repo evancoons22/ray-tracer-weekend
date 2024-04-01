@@ -1,30 +1,69 @@
-use crate::vec3::Vec3;
+use crate::vec3::*;
+use crate::hittable::*;
 use crate::ray::Ray;
 use crate::color::*;
+use std::io::Write;
+use std::f32::INFINITY;
 
 pub struct Camera {
     // camera
-    pub look_from: Vec3,
-    pub look_at: Vec3,
+    pub center: Point3,
 
     // viewport
     pub image_width: i32,
     pub image_height: i32,
+    pub focal_length: f32,
     pub viewport_height: f32,
     pub viewport_width: f32,
-    pub horizontal: Vec3,
-    pub top_left_corner: Vec3,
-    pub vertical: Vec3,
+    pub viewport_u: Vec3,
+    pub viewport_v: Vec3,
+    pub du: Vec3,
+    pub dv: Vec3,
     pub aspect_ratio: f32,
+    pub viewport_upper_left_corner: Vec3,
     pub pixel00_loc: Vec3,
 
     // params
     pub max_depth: i32,
+
+    // world
+    pub world: HittableList,
 }
 
+
 impl Camera {
-    pub fn ray_color(_ray: &Ray) -> Color<f32> { 
-        return Color::new(0.0, 0.0, 0.0);
+    pub fn ray_color(ray: &Ray, world: &HittableList) -> Color<f32> { 
+        // mutable hit record
+        let mut rec = HitRecord {
+            p: Point3::new(0.0, 0.0, 0.0),
+            normal: Vec3::new(0.0, 0.0, 0.0),
+            t: 0.0,
+            front_face: false,
+        };
+
+        if world.hit(ray, 0.001, INFINITY, &mut rec) {
+            return Color::new(rec.normal.x() + 1.0, rec.normal.y() + 1.0, rec.normal.z() + 1.0) * 0.5;
+        } else {
+            let unit_direction = ray.direction().unit_vector();
+            let t = 0.5 * (unit_direction.y() + 1.0);
+            return Color::new(1.0, 1.0, 1.0) * (1.0 -t)  + Color::new(0.5, 0.7, 1.0) * t;
+        
+        }
+
+    }
+
+    pub fn display(&self) { 
+        for j in 0..self.image_height { 
+            eprint!("\rScanlines remaining: {}", self.image_height - j);
+            std::io::stderr().flush().unwrap();
+            for i in 0..self.image_width {
+                let pixel_center = self.pixel00_loc + self.du * (i as f32) + self.dv * (j as f32);
+                let ray_direction = pixel_center - self.center;
+                let ray = Ray::new(self.center, ray_direction);
+                let color = Camera::ray_color(&ray, &self.world);
+                print!("{}", color);
+            }
+        }
     }
 
     pub fn new(image_width: i32, aspect_ratio: f32) -> Camera {
@@ -39,22 +78,41 @@ impl Camera {
         // don't use aspect ratio to calculate viewport height and width
         // this is because we may have lost some precision when calculating image_height by rounding
         // want this to be as accurate as possible
+        let focal_length = 1.0;
         let viewport_height = 2.0;
         let viewport_width = viewport_height * (image_width as f32 / image_height as f32); 
 
+        let camera_center = Point3::new(0.0, 0.0, 0.0);
+        let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
+        let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
+
+        let du = viewport_u / (image_width as f32);
+        let dv = viewport_v / (image_height as f32);
+
+        let viewport_upper_left_corner = camera_center - Vec3::new(0.0, 0.0, focal_length) -  viewport_u / 2.0 - viewport_v / 2.0;
+        let pixel00_loc = viewport_upper_left_corner + du / 2.0 + dv / 2.0;
+
+        let mut world = HittableList::new();
+        world.add(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)));
+        world.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)));
+
+
         Camera {
-            pixel00_loc: Vec3::new(-2.0, 1.0, 1.0),
-            look_from: Vec3::new(0.0, 0.0, -1.0),
-            look_at: Vec3::new(0.0, 0.0, 0.0),
-            top_left_corner: Vec3::new(0.0, 0.0, 0.0),
-            horizontal: Vec3::new(0.0, 0.0, 0.0),
-            vertical: Vec3::new(0.0, 0.0, 0.0),
-            image_width: 256,
+            center: camera_center,
+            image_width,
             image_height,
+            focal_length,
             viewport_height,
             viewport_width,
-            max_depth: 10,
-            aspect_ratio: 16.0 / 9.0,
+            viewport_u,
+            viewport_v,
+            du,
+            dv,
+            aspect_ratio,
+            viewport_upper_left_corner,
+            pixel00_loc,
+            max_depth: 50,
+            world,
         }
     }
 
