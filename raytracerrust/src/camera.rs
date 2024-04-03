@@ -36,17 +36,25 @@ pub struct Camera {
 
 
 impl Camera {
-    pub fn ray_color(ray: &Ray, world: &HittableList) -> Color<f32> { 
+    pub fn ray_color(ray: &Ray, world: &HittableList, max_depth: i32) -> Color<f32> { 
         // mutable hit record
         let mut rec = HitRecord {
             p: Point3::new(0.0, 0.0, 0.0),
             normal: Vec3::new(0.0, 0.0, 0.0),
             t: 0.0,
             front_face: false,
+            material: None,
         };
 
+        if max_depth <= 0 {
+            return Color::new(0.0, 0.0, 0.0);
+        }
+
         if world.hit(ray, Interval::new(0.001, INFINITY), &mut rec) {
-            return Color::new(rec.normal.x() + 1.0, rec.normal.y() + 1.0, rec.normal.z() + 1.0) * 0.5;
+            let color = rec.material.unwrap().scatter(ray, &rec);
+            let direction = rec.normal + Vec3::random_unit_vector();
+            return Camera::ray_color(&Ray::new(rec.p, direction), world, max_depth - 1) * 0.5;
+
         } else {
             let unit_direction = ray.direction().unit_vector();
             let t = 0.5 * (unit_direction.y() + 1.0);
@@ -73,7 +81,7 @@ impl Camera {
         x + y
     }
 
-    pub fn display(&self) { 
+    pub fn render(&self) { 
         for j in 0..self.image_height { 
             eprint!("\rScanlines remaining: {}", self.image_height - j);
             std::io::stderr().flush().unwrap();
@@ -81,12 +89,14 @@ impl Camera {
                 let mut color = Color::new(0.0, 0.0, 0.0);
                 for _ in 1..self.samples_per_pixel {
                     let ray = self.get_ray(i as usize, j as usize);
-                    color = color + Camera::ray_color(&ray, &self.world);
+                    color = color + Camera::ray_color(&ray, &self.world, self.max_depth);
                 }
                 color = color.scale_color(self.samples_per_pixel as f32);
+                color = color.linear_to_gamma();
                 print!("{}", color);
             }
         }
+        eprintln!("\nDone.");
     }
 
     pub fn new(image_width: i32, aspect_ratio: f32, world: HittableList, samples_per_pixel: i32) -> Camera {

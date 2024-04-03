@@ -46,6 +46,14 @@ impl Color<f32> {
            b: self.b / samples_per_pixel,
         }
     }
+
+    pub fn linear_to_gamma(self) -> Color<f32> { 
+        Color { 
+            r: self.r.sqrt(),
+            g: self.g.sqrt(),
+            b: self.b.sqrt(),
+        }
+    }
 }
 
 

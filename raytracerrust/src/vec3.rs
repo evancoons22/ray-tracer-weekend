@@ -65,11 +65,43 @@ impl Vec3 {
         }
     }
 
+    pub fn random_range(min: f32, max: f32) -> Vec3 { 
+        Vec3 { 
+            e: [
+                rand::random::<f32>() * (max - min) + min,
+                rand::random::<f32>() * (max - min) + min,
+                rand::random::<f32>() * (max - min) + min,
+            ]
+        }
+    }
+
     pub fn random_in_unit_sphere() -> Vec3 { 
         loop { 
-            let p = Vec3::random() * 2.0 - Vec3::new(1.0, 1.0, 1.0);
+            let p = Vec3::random_range(-1.0, 1.0);
             if p.length_squared() < 1.0 { return p; }
         }
+    }
+
+    pub fn random_unit_vector() -> Vec3 { 
+        Vec3::random_in_unit_sphere().unit_vector()
+    }
+
+    pub fn random_on_hemisphere(normal: Vec3) -> Vec3 { 
+        let in_unit_sphere = Vec3::random_unit_vector();
+        if in_unit_sphere.dot(normal) > 0.0 { 
+            return in_unit_sphere;
+        } else { 
+            return -in_unit_sphere;
+        }
+    }
+
+    pub fn reflect(&self, n: Vec3) -> Vec3 { 
+        *self - n * self.dot(n) * 2.0
+    }
+
+    pub fn near_zero(&self) -> bool { 
+        let s = 1e-8;
+        self.e[0].abs() < s && self.e[1].abs() < s && self.e[2].abs() < s
     }
 }
 

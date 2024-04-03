@@ -1,12 +1,14 @@
 use crate::vec3::*;
 use crate::ray::*;
 use crate::helper::*;
+use crate::material::*;
 
 pub struct HitRecord { 
     pub p: Point3,
     pub normal: Vec3,
     pub t: f32,
     pub front_face: bool,
+    pub material: Option<Box<dyn Material>>,
 } 
 
 pub trait Hittable { 
@@ -38,6 +40,7 @@ impl Hittable for HittableList {
             normal: Vec3::new(0.0, 0.0, 0.0),
             t: 0.0,
             front_face: false,
+            material: None,
         };
         let mut hit_anything = false;
         let mut closest_so_far = ray_t.t_max;
@@ -58,11 +61,12 @@ impl Hittable for HittableList {
 pub struct Sphere { 
     pub center: Point3,
     pub radius: f32,
+    material: Option<Box<dyn Material>>,
 }
 
 impl Sphere { 
-    pub fn new(center: Point3, radius: f32) -> Sphere { 
-        Sphere { center, radius }
+    pub fn new<T: Material>(center: Point3, radius: f32, material: T) -> Sphere { 
+        Sphere { center, radius, material: Some(Box::new(material))}
     }
 }
 
