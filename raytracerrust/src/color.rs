@@ -38,9 +38,20 @@ impl Add for Color<f32> {
     }
 }
 
+impl Color<f32> { 
+    pub fn scale_color(self, samples_per_pixel: f32) -> Color<f32> { 
+        Color  {
+           r: self.r / samples_per_pixel,
+           g: self.g / samples_per_pixel,
+           b: self.b / samples_per_pixel,
+        }
+    }
+}
+
 
 impl Display for Color<f32> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        // divide the color by the number of samples
         write!(f, "{:?} {:?} {:?}\n", (self.r * 255.99) as i32, (self.g * 255.99) as i32, (self.b * 255.99) as i32)
     }
 }

@@ -1,7 +1,10 @@
 use crate::vec3::*;
 use crate::hittable::*;
+use crate::helper::*;
 use crate::ray::Ray;
 use crate::color::*;
+
+use rand::Rng;
 use std::io::Write;
 use std::f32::INFINITY;
 
@@ -25,6 +28,7 @@ pub struct Camera {
 
     // params
     pub max_depth: i32,
+    pub samples_per_pixel: i32,
 
     // world
     pub world: HittableList,
@@ -41,7 +45,7 @@ impl Camera {
             front_face: false,
         };
 
-        if world.hit(ray, 0.001, INFINITY, &mut rec) {
+        if world.hit(ray, Interval::new(0.001, INFINITY), &mut rec) {
             return Color::new(rec.normal.x() + 1.0, rec.normal.y() + 1.0, rec.normal.z() + 1.0) * 0.5;
         } else {
             let unit_direction = ray.direction().unit_vector();
@@ -52,21 +56,40 @@ impl Camera {
 
     }
 
+    fn get_ray(&self, i: usize, j: usize) -> Ray { 
+        let pixel_center = self.pixel00_loc + self.du * (i as f32) + self.dv * (j as f32);
+        let pixel_sample = pixel_center + Camera::pixel_sample_square(&self);
+
+        let ray_origin = self.center;
+        let ray_direction = pixel_sample - ray_origin;
+
+        return Ray::new(ray_origin, ray_direction);
+        } 
+
+    fn pixel_sample_square(&self) -> Vec3 { 
+        let mut rng = rand::thread_rng();
+        let x = self.du * rng.gen_range(-0.5..0.5);
+        let y = self.dv * rng.gen_range(-0.5..0.5);
+        x + y
+    }
+
     pub fn display(&self) { 
         for j in 0..self.image_height { 
             eprint!("\rScanlines remaining: {}", self.image_height - j);
             std::io::stderr().flush().unwrap();
             for i in 0..self.image_width {
-                let pixel_center = self.pixel00_loc + self.du * (i as f32) + self.dv * (j as f32);
-                let ray_direction = pixel_center - self.center;
-                let ray = Ray::new(self.center, ray_direction);
-                let color = Camera::ray_color(&ray, &self.world);
+                let mut color = Color::new(0.0, 0.0, 0.0);
+                for _ in 1..self.samples_per_pixel {
+                    let ray = self.get_ray(i as usize, j as usize);
+                    color = color + Camera::ray_color(&ray, &self.world);
+                }
+                color = color.scale_color(self.samples_per_pixel as f32);
                 print!("{}", color);
             }
         }
     }
 
-    pub fn new(image_width: i32, aspect_ratio: f32) -> Camera {
+    pub fn new(image_width: i32, aspect_ratio: f32, world: HittableList, samples_per_pixel: i32) -> Camera {
 
         // calculate image_height and make sure it is > 1, else, set to 1
         let image_height = if aspect_ratio > 1.0 {
@@ -92,9 +115,6 @@ impl Camera {
         let viewport_upper_left_corner = camera_center - Vec3::new(0.0, 0.0, focal_length) -  viewport_u / 2.0 - viewport_v / 2.0;
         let pixel00_loc = viewport_upper_left_corner + du / 2.0 + dv / 2.0;
 
-        let mut world = HittableList::new();
-        world.add(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)));
-        world.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)));
 
 
         Camera {
@@ -112,6 +132,7 @@ impl Camera {
             viewport_upper_left_corner,
             pixel00_loc,
             max_depth: 50,
+            samples_per_pixel,
             world,
         }
     }

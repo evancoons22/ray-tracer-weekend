@@ -1,5 +1,6 @@
 use crate::vec3::*;
 use crate::ray::*;
+use crate::helper::*;
 
 pub struct HitRecord { 
     pub p: Point3,
@@ -9,7 +10,7 @@ pub struct HitRecord {
 } 
 
 pub trait Hittable { 
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool;
+    fn hit(&self, ray: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool;
     fn set_face_normal(&self, ray: &Ray, outward_normal: Vec3, rec: &mut HitRecord) { 
         rec.front_face = ray.direction().dot(outward_normal) < 0.0;
         rec.normal = if rec.front_face { outward_normal } else { -outward_normal };
@@ -31,7 +32,7 @@ impl HittableList {
 }
 
 impl Hittable for HittableList { 
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool { 
+    fn hit(&self, ray: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool { 
         let mut temp_rec = HitRecord { 
             p: Point3::new(0.0, 0.0, 0.0),
             normal: Vec3::new(0.0, 0.0, 0.0),
@@ -39,9 +40,9 @@ impl Hittable for HittableList {
             front_face: false,
         };
         let mut hit_anything = false;
-        let mut closest_so_far = t_max;
+        let mut closest_so_far = ray_t.t_max;
         for object in self.objects.iter() { 
-            if object.hit(ray, t_min, closest_so_far, &mut temp_rec) { 
+            if object.hit(ray, Interval::new(ray_t.t_min, closest_so_far), &mut temp_rec) { 
                 hit_anything = true;
                 closest_so_far = temp_rec.t;
                 rec.p = temp_rec.p;
@@ -66,7 +67,7 @@ impl Sphere {
 }
 
 impl Hittable for Sphere { 
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool { 
+    fn hit(&self, ray: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool { 
         let oc = ray.origin() - self.center;
         let a = ray.direction().length_squared();
         let half_b = oc.dot(ray.direction());
@@ -79,10 +80,9 @@ impl Hittable for Sphere {
         let sqrtd = discriminant.sqrt();
         // check the smaller root first
         let mut root = (-half_b - sqrtd) / a;
-        if root < t_min || t_max < root { 
-            // check the larger root second
+        if !ray_t.surrounds(root) { 
             root = (-half_b + sqrtd) / a;
-            if root < t_min || t_max < root { 
+            if !ray_t.surrounds(root) { 
                 return false;
             }
         }
