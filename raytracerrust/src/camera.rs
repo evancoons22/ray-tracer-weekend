@@ -51,7 +51,6 @@ impl Camera {
         }
 
         if world.hit(ray, Interval::new(0.001, INFINITY), &mut rec) {
-            let color = rec.material.unwrap().scatter(ray, &rec);
             let direction = rec.normal + Vec3::random_unit_vector();
             return Camera::ray_color(&Ray::new(rec.p, direction), world, max_depth - 1) * 0.5;
 
