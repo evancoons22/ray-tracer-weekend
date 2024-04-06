@@ -26,6 +26,19 @@ impl Mul<f32> for Color<f32> {
     }
 }
 
+impl Mul<Color<f32>> for Color<f32> {
+    type Output = Color<f32>;
+
+    fn mul(self, other: Color<f32>) -> Color<f32> {
+        Color {
+            r: self.r * other.r,
+            g: self.g * other.g,
+            b: self.b * other.b,
+        }
+    }
+}
+
+
 impl Add for Color<f32> {
     type Output = Color<f32>;
 
@@ -37,6 +50,22 @@ impl Add for Color<f32> {
         }
     }
 }
+
+impl Clone for Color<f32> {
+    fn clone(&self) -> Color<f32> {
+        Color {
+            r: self.r,
+            g: self.g,
+            b: self.b,
+        }
+    }
+}
+
+// implement the copy trait
+
+impl Copy for Color<f32> {
+}
+
 
 impl Color<f32> { 
     pub fn scale_color(self, samples_per_pixel: f32) -> Color<f32> { 

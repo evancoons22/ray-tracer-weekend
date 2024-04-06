@@ -51,8 +51,21 @@ impl Camera {
         }
 
         if world.hit(ray, Interval::new(0.001, INFINITY), &mut rec) {
-            let direction = rec.normal + Vec3::random_unit_vector();
-            return Camera::ray_color(&Ray::new(rec.p, direction), world, max_depth - 1) * 0.5;
+           let mut scattered = Ray::new(Point3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0));
+           let mut attenuation = Color::new(0.0, 0.0, 0.0);
+           if let Some(material) = rec.material.as_ref() {
+               if let Some((attenuation_, scattered_)) = material.scatter(ray, &rec) {
+                   attenuation = attenuation_;
+                   scattered = scattered_;
+               }
+           }
+           return attenuation * Camera::ray_color(&scattered, world, max_depth - 1);
+
+           //if let Some((attenuation, scattered)) = rec.material.as_ref().unwrap().scatter(ray, &rec) {
+           //    return attenuation * Camera::ray_color(&scattered, world, max_depth - 1);
+           //} else {
+           //    return Color::new(0.0, 0.0, 0.0);
+           //}
 
         } else {
             let unit_direction = ray.direction().unit_vector();
@@ -86,10 +99,11 @@ impl Camera {
             std::io::stderr().flush().unwrap();
             for i in 0..self.image_width {
                 let mut color = Color::new(0.0, 0.0, 0.0);
-                for _ in 1..self.samples_per_pixel {
-                    let ray = self.get_ray(i as usize, j as usize);
-                    color = color + Camera::ray_color(&ray, &self.world, self.max_depth);
-                }
+                //for _ in 1..self.samples_per_pixel {
+                //    let ray = self.get_ray(i as usize, j as usize);
+                //    color = color + Camera::ray_color(&ray, &self.world, self.max_depth);
+                //}
+                color = color + Camera::ray_color(&self.get_ray(i as usize, j as usize), &self.world, self.max_depth);
                 color = color.scale_color(self.samples_per_pixel as f32);
                 color = color.linear_to_gamma();
                 print!("{}", color);

@@ -1,11 +1,10 @@
 use crate::color::Color;
 use crate::hittable::HitRecord;
-use crate::vec3::Vec3;
 use crate::ray::Ray;
-
+use crate::vec3::Vec3;
 
 pub trait Material {
-    fn scatter(self, ray: &Ray, rec: &HitRecord) -> Option<(Color<f32>, Ray)>;
+    fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<(Color<f32>, Ray)>;
 }
 
 pub struct Metal {
@@ -18,9 +17,9 @@ impl Metal {
     }
 }
 impl Material for Metal {
-    fn scatter(self, ray: &Ray, rec: &HitRecord) -> Option<(Color<f32>, Ray)> {
+    fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<(Color<f32>, Ray)> {
         let reflected = ray.direction().unit_vector().reflect(rec.normal);
-        let scattered = Ray::new(rec.p, reflected + Vec3::random_in_unit_sphere());
+        let scattered = Ray::new(rec.p, reflected + self.fuzz * Vec3::random_in_unit_sphere());
         if scattered.direction().dot(rec.normal) > 0.0 {
             Some((self.albedo, scattered))
         } else {
@@ -38,7 +37,7 @@ impl Lambertian {
     }
 }
 impl Material for Lambertian {
-    fn scatter(self, _ray: &Ray, rec: &HitRecord) -> Option<(Color<f32>, Ray)> {
+    fn scatter(&self, _ray: &Ray, rec: &HitRecord) -> Option<(Color<f32>, Ray)> {
         let mut scatter_direction = rec.normal + Vec3::random_unit_vector();
         if scatter_direction.near_zero() {
             scatter_direction = rec.normal;

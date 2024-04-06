@@ -1,41 +1,47 @@
-use crate::vec3::*;
-use crate::ray::*;
 use crate::helper::*;
 use crate::material::*;
+use crate::ray::*;
+use crate::vec3::*;
 
-pub struct HitRecord { 
+pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
     pub t: f32,
     pub front_face: bool,
     pub material: Option<Box<dyn Material>>,
-} 
+}
 
-pub trait Hittable { 
+pub trait Hittable {
     fn hit(&self, ray: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool;
-    fn set_face_normal(&self, ray: &Ray, outward_normal: Vec3, rec: &mut HitRecord) { 
+    fn set_face_normal(&self, ray: &Ray, outward_normal: Vec3, rec: &mut HitRecord) {
         rec.front_face = ray.direction().dot(outward_normal) < 0.0;
-        rec.normal = if rec.front_face { outward_normal } else { -outward_normal };
+        rec.normal = if rec.front_face {
+            outward_normal
+        } else {
+            -outward_normal
+        };
     }
 }
 
-pub struct HittableList { 
+pub struct HittableList {
     pub objects: Vec<Box<dyn Hittable>>,
 }
 
-impl HittableList { 
-    pub fn new() -> HittableList { 
-        HittableList { objects: Vec::new() }
+impl HittableList {
+    pub fn new() -> HittableList {
+        HittableList {
+            objects: Vec::new(),
+        }
     }
 
-    pub fn add(&mut self, object: Box<dyn Hittable>) { 
+    pub fn add(&mut self, object: Box<dyn Hittable>) {
         self.objects.push(object);
     }
 }
 
-impl Hittable for HittableList { 
-    fn hit(&self, ray: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool { 
-        let mut temp_rec = HitRecord { 
+impl Hittable for HittableList {
+    fn hit(&self, ray: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
+        let mut temp_rec = HitRecord {
             p: Point3::new(0.0, 0.0, 0.0),
             normal: Vec3::new(0.0, 0.0, 0.0),
             t: 0.0,
@@ -44,8 +50,12 @@ impl Hittable for HittableList {
         };
         let mut hit_anything = false;
         let mut closest_so_far = ray_t.t_max;
-        for object in self.objects.iter() { 
-            if object.hit(ray, Interval::new(ray_t.t_min, closest_so_far), &mut temp_rec) { 
+        for object in self.objects.iter() {
+            if object.hit(
+                ray,
+                Interval::new(ray_t.t_min, closest_so_far),
+                &mut temp_rec,
+            ) {
                 hit_anything = true;
                 closest_so_far = temp_rec.t;
                 rec.p = temp_rec.p;
@@ -58,20 +68,24 @@ impl Hittable for HittableList {
     }
 }
 
-pub struct Sphere { 
+pub struct Sphere {
     pub center: Point3,
     pub radius: f32,
     material: Option<Box<dyn Material>>,
 }
 
-impl Sphere { 
-    pub fn new<T: Material>(center: Point3, radius: f32, material: T) -> Sphere { 
-        Sphere { center, radius, material: Some(Box::new(material))}
+impl Sphere {
+    pub fn new<T: Material + 'static>(center: Point3, radius: f32, material: T) -> Sphere {
+        Sphere {
+            center,
+            radius,
+            material: Some(Box::new(material)),
+        }
     }
 }
 
-impl Hittable for Sphere { 
-    fn hit(&self, ray: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool { 
+impl Hittable for Sphere {
+    fn hit(&self, ray: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
         let oc = ray.origin() - self.center;
         let a = ray.direction().length_squared();
         let half_b = oc.dot(ray.direction());
@@ -84,9 +98,9 @@ impl Hittable for Sphere {
         let sqrtd = discriminant.sqrt();
         // check the smaller root first
         let mut root = (-half_b - sqrtd) / a;
-        if !ray_t.surrounds(root) { 
+        if !ray_t.surrounds(root) {
             root = (-half_b + sqrtd) / a;
-            if !ray_t.surrounds(root) { 
+            if !ray_t.surrounds(root) {
                 return false;
             }
         }
