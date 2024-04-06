@@ -62,6 +62,7 @@ impl Hittable for HittableList {
                 rec.normal = temp_rec.normal;
                 rec.t = temp_rec.t;
                 rec.front_face = temp_rec.front_face;
+                rec.material = temp_rec.material.clone();
             }
         }
         hit_anything
@@ -108,7 +109,7 @@ impl Hittable for Sphere {
         rec.p = ray.at(rec.t);
         let outward_normal = (rec.p - self.center) / self.radius;
         self.set_face_normal(ray, outward_normal, rec);
-        rec.material = self.material;
+        rec.material = self.material.clone();
         true
     }
 }

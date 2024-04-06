@@ -51,24 +51,12 @@ impl Camera {
         }
 
         if world.hit(ray, Interval::new(0.001, INFINITY), &mut rec) {
-           //let  scattered = Ray::new(Point3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0));
-           //let  attenuation = Color::new(0.0, 0.0, 0.0);
-           //if let Some(material) = rec.material.as_ref() {
-           //    if let Some((attenuation_, scattered_)) = material.scatter(ray, &rec) {
-           //        return attenuation_ * Camera::ray_color(&scattered_, world, max_depth - 1);
-           //    }
-           //}
-
            let material = rec.material.as_ref().unwrap();
-           let (attenuation, scattered) = material.scatter(ray, &rec).unwrap();
-           return attenuation * Camera::ray_color(&scattered, world, max_depth - 1);
-           //return Color::new(0.0, 0.0, 1.0);
-
-           //if let Some((attenuation, scattered)) = rec.material.as_ref().unwrap().scatter(ray, &rec) {
-           //    return attenuation * Camera::ray_color(&scattered, world, max_depth - 1);
-           //} else {
-           //    return Color::new(0.0, 0.0, 0.0);
-           //}
+           if let Some((attenuation, scattered)) = material.scatter(ray, &rec) {
+               return attenuation * Camera::ray_color(&scattered, world, max_depth - 1);
+           } else { 
+               Color::new(0.0, 0.0, 0.0)
+           } 
 
         } else {
             let unit_direction = ray.direction().unit_vector();
@@ -102,13 +90,13 @@ impl Camera {
             std::io::stderr().flush().unwrap();
             for i in 0..self.image_width {
                 let mut color = Color::new(0.0, 0.0, 0.0);
-                //for _ in 1..self.samples_per_pixel {
-                //    let ray = self.get_ray(i as usize, j as usize);
-                //    color = color + Camera::ray_color(&ray, &self.world, self.max_depth);
-                //}
-                color = color + Camera::ray_color(&self.get_ray(i as usize, j as usize), &self.world, self.max_depth);
-                //color = color.scale_color(self.samples_per_pixel as f32);
-                //color = color.linear_to_gamma();
+                for _ in 1..self.samples_per_pixel {
+                    let ray = self.get_ray(i as usize, j as usize);
+                    color = color + Camera::ray_color(&ray, &self.world, self.max_depth);
+                }
+                //color = color + Camera::ray_color(&self.get_ray(i as usize, j as usize), &self.world, self.max_depth);
+                color = color.scale_color(self.samples_per_pixel as f32);
+                color = color.linear_to_gamma();
                 print!("{}", color);
             }
         }
