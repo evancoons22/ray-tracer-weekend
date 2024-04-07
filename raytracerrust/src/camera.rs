@@ -4,6 +4,9 @@ use crate::helper::*;
 use crate::ray::Ray;
 use crate::color::*;
 
+use std::sync::mpsc; // multiprocessor, single consumer
+use rayon::prelude::*;
+
 use rand::Rng;
 use std::io::Write;
 use std::f32::INFINITY;
@@ -83,6 +86,44 @@ impl Camera {
         let y = self.dv * rng.gen_range(-0.5..0.5);
         x + y
     }
+
+    pub fn compute_color(&self, i: usize, j: usize) -> Color<f32> { 
+        let mut color = Color::new(0.0, 0.0, 0.0);
+        for _ in 1..self.samples_per_pixel {
+            let ray = self.get_ray(i, j);
+            color = color + Camera::ray_color(&ray, &self.world, self.max_depth);
+        }
+        color = color.scale_color(self.samples_per_pixel as f32);
+        color = color.linear_to_gamma();
+        color
+    }
+
+    pub fn render_threaded(&self) { 
+        let (tx, rx) = mpsc::channel();
+
+        eprint!("\rBeginning Multithreaded render");
+        std::io::stderr().flush().unwrap();
+        (0..self.image_height).into_par_iter().for_each_with(tx, |tx, j| {
+            for i in 0..self.image_width {
+                let color = self.compute_color(i as usize, j as usize); // Assume this is a function that does the computation.
+                tx.send((j, i, color)).unwrap();
+            }
+        });
+
+        let mut results = Vec::new();
+        for _ in 0..self.image_height*self.image_width {
+            results.push(rx.recv().unwrap());
+        }
+        results.sort_by(|a, b| a.0.cmp(&b.0).then_with(|| a.1.cmp(&b.1)));
+
+        for (_, _, color) in results {
+            print!("{}", color); // Your printing logic here.
+        }
+        eprintln!("\nDone.");
+    }
+
+    
+    
 
     pub fn render(&self) { 
         for j in 0..self.image_height { 

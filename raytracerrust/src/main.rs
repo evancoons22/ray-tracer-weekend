@@ -27,5 +27,5 @@ fn main() {
     let cam = Camera::new(width, aspect_ratio, world, 100);
 
     setup_ppm(&cam );
-    cam.render();
+    cam.render_threaded();
 }

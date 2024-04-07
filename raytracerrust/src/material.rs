@@ -3,7 +3,12 @@ use crate::hittable::HitRecord;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 
-pub trait Material {
+//pub trait Material {
+//    fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<(Color<f32>, Ray)>;
+//    fn box_clone(&self) -> Box<dyn Material>;
+//}
+
+pub trait Material: Send + Sync {
     fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<(Color<f32>, Ray)>;
     fn box_clone(&self) -> Box<dyn Material>;
 }
