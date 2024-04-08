@@ -11,19 +11,8 @@ pub struct HitRecord {
     pub material: Option<Box<dyn Material>>,
 }
 
-//pub trait Hittable {
-//    fn hit(&self, ray: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool;
-//    fn set_face_normal(&self, ray: &Ray, outward_normal: Vec3, rec: &mut HitRecord) {
-//        rec.front_face = ray.direction().dot(outward_normal) < 0.0;
-//        rec.normal = if rec.front_face {
-//            outward_normal
-//        } else {
-//            -outward_normal
-//        };
-//    }
-//}
-
-pub trait Hittable: Sync + Send {
+// force it to implement Sync and Send I guess, but nothing special about it
+pub trait Hittable: Sync + Send { 
     fn hit(&self, ray: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool;
     fn set_face_normal(&self, ray: &Ray, outward_normal: Vec3, rec: &mut HitRecord) {
         rec.front_face = ray.direction().dot(outward_normal) < 0.0;

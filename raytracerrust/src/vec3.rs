@@ -99,6 +99,14 @@ impl Vec3 {
         *self - n * self.dot(n) * 2.0
     }
 
+    pub fn refract(&self, n: Vec3, etai_over_etat: f32) -> Vec3 { 
+        let uv = self.unit_vector();
+        let cos_theta = (-uv).dot(n).min(1.0);
+        let r_out_perp = (uv + n * cos_theta) * etai_over_etat;
+        let r_out_parallel = n * -(1.0 - r_out_perp.length_squared()).abs().sqrt();
+        r_out_perp + r_out_parallel
+    }
+
     pub fn near_zero(&self) -> bool { 
         let s = 1e-8;
         self.e[0].abs() < s && self.e[1].abs() < s && self.e[2].abs() < s
