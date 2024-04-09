@@ -22,6 +22,13 @@ pub struct Camera {
     pub vup: Vec3,
     pub vfov: f32,
 
+    // code for defocus blur, maybe later
+    //pub defocus_angle: f32, // variation angle of rays through each pixel
+    //pub focus_dist: f32, // distance from lookfrom to plane of perfect focus
+    //defocus_disk_u: Vec3, //
+    //defocus_disk_v: Vec3, //
+    // implement later if desired
+
     // viewport
     pub image_width: i32,
     pub image_height: i32,
@@ -165,7 +172,7 @@ impl Camera {
         let w = (look_from - look_at).unit_vector();
         let u = Vec3::cross(&Vec3::new(0.0, 1.0, 0.0), &w).unit_vector();
         let v = Vec3::cross(&w, &u);
-        let vfov = 90.0;
+        let vfov = 20.0;
 
         // don't use aspect ratio to calculate viewport height and width
         // this is because we may have lost some precision when calculating image_height by rounding
@@ -176,9 +183,6 @@ impl Camera {
         let viewport_height = 2.0 * h * focal_length;
         let viewport_width = viewport_height * (image_width as f32 / image_height as f32); 
 
-        //let camera_center = Point3::new(0.0, 0.0, 0.0);
-        //let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
-        //let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
         let viewport_u = u * viewport_width;
         let viewport_v = -v * viewport_height;
 
