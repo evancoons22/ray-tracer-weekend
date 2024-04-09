@@ -27,7 +27,9 @@ fn main() {
     //world.add(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, Lambertian::new(Color::new(0.8, 0.3, 0.3)))));
     //world.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, Lambertian::new(Color::new(0.8, 0.8, 0.0)))));
 
-    let cam = Camera::new(width, aspect_ratio, world, 100);
+    let look_from = Point3::new(-2.0, 2.0, 1.0);
+    let look_at = Point3::new(0.0, 0.0, -1.0);
+    let cam = Camera::new(width, aspect_ratio, world, look_from, look_at, 100);
 
     setup_ppm(&cam );
     cam.render_threaded();

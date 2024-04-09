@@ -41,7 +41,7 @@ impl Vec3 {
         self.e[0] * other.e[0] + self.e[1] * other.e[1] + self.e[2] * other.e[2]
     }
 
-    pub fn cross(&self, other: Vec3) -> Vec3 { 
+    pub fn cross(&self, other: &Vec3) -> Vec3 { 
         Vec3 { 
             e: [
                 self.e[1] * other.e[2] - self.e[2] * other.e[1],

@@ -14,6 +14,13 @@ use std::f32::INFINITY;
 pub struct Camera {
     // camera
     pub center: Point3,
+    pub u: Vec3,
+    pub v: Vec3,
+    pub w: Vec3,
+    pub look_from: Point3,
+    pub look_at: Point3,
+    pub vup: Vec3,
+    pub vfov: f32,
 
     // viewport
     pub image_width: i32,
@@ -67,6 +74,7 @@ impl Camera {
             return Color::new(1.0, 1.0, 1.0) * (1.0 -t)  + Color::new(0.5, 0.7, 1.0) * t;
         
         }
+
 
     }
 
@@ -144,7 +152,7 @@ impl Camera {
         eprintln!("\nDone.");
     }
 
-    pub fn new(image_width: i32, aspect_ratio: f32, world: HittableList, samples_per_pixel: i32) -> Camera {
+    pub fn new(image_width: i32, aspect_ratio: f32, world: HittableList, look_from: Point3, look_at: Point3, samples_per_pixel: i32) -> Camera {
 
         // calculate image_height and make sure it is > 1, else, set to 1
         let image_height = if aspect_ratio > 1.0 {
@@ -153,27 +161,44 @@ impl Camera {
             (image_width as f32 / aspect_ratio).ceil() as i32
         };
 
+        let vup = Vec3::new(0.0,1.0,0.0);
+        let w = (look_from - look_at).unit_vector();
+        let u = Vec3::cross(&Vec3::new(0.0, 1.0, 0.0), &w).unit_vector();
+        let v = Vec3::cross(&w, &u);
+        let vfov = 90.0;
+
         // don't use aspect ratio to calculate viewport height and width
         // this is because we may have lost some precision when calculating image_height by rounding
         // want this to be as accurate as possible
-        let focal_length = 1.0;
-        let viewport_height = 2.0;
+        let focal_length = (look_from - look_at).length();
+        let theta = degrees_to_radians(vfov);
+        let h = (theta/2.0).tan();
+        let viewport_height = 2.0 * h * focal_length;
         let viewport_width = viewport_height * (image_width as f32 / image_height as f32); 
 
-        let camera_center = Point3::new(0.0, 0.0, 0.0);
-        let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
-        let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
+        //let camera_center = Point3::new(0.0, 0.0, 0.0);
+        //let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
+        //let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
+        let viewport_u = u * viewport_width;
+        let viewport_v = -v * viewport_height;
 
         let du = viewport_u / (image_width as f32);
         let dv = viewport_v / (image_height as f32);
 
-        let viewport_upper_left_corner = camera_center - Vec3::new(0.0, 0.0, focal_length) -  viewport_u / 2.0 - viewport_v / 2.0;
+        //let viewport_upper_left_corner = camera_center - Vec3::new(0.0, 0.0, focal_length) -  viewport_u / 2.0 - viewport_v / 2.0;
+        let center = look_from.clone();
+        let viewport_upper_left_corner = center - viewport_u / 2.0 - viewport_v / 2.0 - w * focal_length;
         let pixel00_loc = viewport_upper_left_corner + du / 2.0 + dv / 2.0;
 
-
-
         Camera {
-            center: camera_center,
+            center,
+            look_from,
+            look_at,
+            vfov,
+            u,
+            v,
+            w,
+            vup,
             image_width,
             image_height,
             focal_length,
